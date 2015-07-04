@@ -132,6 +132,10 @@
   'N': 'vim-mode:repeat-search-backwards'
 
   '%': 'vim-mode:bracket-matching-motion'
+  '] )': 'vim-mode:bracket-searching-motion-parentheses'
+  '[ (': 'vim-mode:bracket-searching-motion-parentheses-reverse'
+  '] }': 'vim-mode:bracket-searching-motion-curly'
+  '[ {': 'vim-mode:bracket-searching-motion-curly-reverse'
 
   '1': 'vim-mode:repeat-prefix'
   '2': 'vim-mode:repeat-prefix'

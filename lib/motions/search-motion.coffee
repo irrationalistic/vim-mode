@@ -206,5 +206,81 @@ class RepeatSearch extends SearchBase
     @reverse = not @initiallyReversed
     this
 
+###
+  Needs to find plausible containment, but doesn't need ending match!
+  (valid)
+  (valid
 
-module.exports = {Search, SearchCurrentWord, BracketMatchingMotion, RepeatSearch}
+  Should seek left or right depending on isReversed and find
+  occurrences of in and out character. Each out character decrements
+  a running counter. Each in counter increments a running counter.
+  As soon as the counter is positive, we arrived at a match!
+
+  (  (  )   test )
+  +1 +1 -1  < ^
+
+  Should work the same way in the other direction with swapped values
+###
+class BracketSearchingMotion extends SearchBase
+  operatesInclusively: false
+
+  isComplete: -> true
+  constructor: (@editor, @vimState, @character, @isReversed) ->
+    super(@editor, @vimState)
+    [@inCharacter, @outCharacter] = @getSearchData()
+
+  getSearchData: () ->
+    if (index = OpenBrackets.indexOf(@character)) >= 0
+      [@character, CloseBrackets[index], false]
+    else if (index = CloseBrackets.indexOf(@character)) >= 0
+      [@character, OpenBrackets[index], true]
+    else
+      []
+
+  characterAt: (position) ->
+    @editor.getTextInBufferRange([position, position.translate([0, 1])])
+
+  searchForMatch: (position, direction) ->
+    point = position.copy()
+    eofPosition = @editor.getEofBufferPosition().translate([0, 1])
+    lineLength = @editor.lineTextForBufferRow(point.row).length
+    count = 0
+
+    # if starting on one a matching item, force an offset
+    # character = @characterAt(point)
+    # count-- if character is @inCharacter
+    # count++ if character is @outCharacter
+
+    loop
+      character = @characterAt(point)
+
+      # because this is an exclusive motion
+      if not point.isEqual position
+        count++ if character is @inCharacter
+        count-- if character is @outCharacter
+
+      return point if count > 0
+      return null if point.isEqual([0, -1])
+      return null if point.isEqual(eofPosition)
+
+      point.column += direction
+
+      # console.log point.column, character, count
+
+      if point.column < 0
+        point.row--
+        lineLength = @editor.lineTextForBufferRow(point.row)?.length
+        point.column = lineLength - 1
+      else if point.column >= lineLength
+        point.row++
+        lineLength = @editor.lineTextForBufferRow(point.row)?.length
+        point.column = 0
+
+      return if lineLength is undefined
+
+  moveCursor: (cursor) ->
+    startPosition = cursor.getBufferPosition()
+    if matchPosition = @searchForMatch(startPosition, if @isReversed then -1 else 1)
+      cursor.setBufferPosition(matchPosition)
+
+module.exports = {Search, SearchCurrentWord, BracketMatchingMotion, RepeatSearch, BracketSearchingMotion}
