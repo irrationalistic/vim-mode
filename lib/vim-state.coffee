@@ -177,6 +177,8 @@ class VimState
       'bracket-searching-motion-parentheses-reverse': (e) => new Motions.BracketSearchingMotion(@editor, this, '(')
       'bracket-searching-motion-curly': (e) => new Motions.BracketSearchingMotion(@editor, this, '}')
       'bracket-searching-motion-curly-reverse': (e) => new Motions.BracketSearchingMotion(@editor, this, '{')
+      'bracket-searching-motion-comment': (e) => new Motions.BracketSearchingMotion(@editor, this, '*/')
+      'bracket-searching-motion-comment-reverse': (e) => new Motions.BracketSearchingMotion(@editor, this, '/*')
 
   # Private: Register multiple command handlers via an {Object} that maps
   # command names to command handler functions.

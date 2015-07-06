@@ -1789,7 +1789,7 @@ describe "Motions", ->
 
   describe 'various bracket motions', ->
     beforeEach ->
-      editor.setText("((test)\n{{test}\n")
+      editor.setText("((test)\n{{test}\n/*comment*/\n")
       editor.setCursorBufferPosition([0, 0])
 
     it 'finds nearest parenthesis', ->
@@ -1822,6 +1822,16 @@ describe "Motions", ->
       keydown('[')
       keydown('(')
       expect(editor.getCursorBufferPosition()).toEqual [0, 0]
+
+    it 'supports block comments', ->
+      editor.setCursorBufferPosition([2, 4])
+      keydown('[')
+      keydown('*')
+      expect(editor.getCursorBufferPosition()).toEqual [2, 0]
+
+      keydown(']')
+      keydown('*')
+      expect(editor.getCursorBufferPosition()).toEqual [2, 10]
 
   describe "scrolling screen and keeping cursor in the same screen position", ->
     beforeEach ->

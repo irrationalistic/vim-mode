@@ -126,8 +126,8 @@ class SearchCurrentWord extends SearchBase
   execute: (count=1) ->
     super(count) if @input.characters.length > 0
 
-OpenBrackets = ['(', '{', '[']
-CloseBrackets = [')', '}', ']']
+OpenBrackets = ['(', '{', '[', '/*']
+CloseBrackets = [')', '}', ']', '*/']
 AnyBracket = new RegExp(OpenBrackets.concat(CloseBrackets).map(_.escapeRegExp).join("|"))
 
 class BracketMatchingMotion extends SearchBase
@@ -146,9 +146,10 @@ class BracketMatchingMotion extends SearchBase
     lineLength = @editor.lineTextForBufferRow(point.row).length
     eofPosition = @editor.getEofBufferPosition().translate([0, 1])
     increment = if reverse then -1 else 1
+    characterLen = inCharacter.length
 
     loop
-      character = @characterAt(point)
+      character = @characterAt(point, characterLen)
 
       if @operatesInclusively or not point.isEqual startPosition
         depth++ if character is inCharacter
@@ -172,8 +173,8 @@ class BracketMatchingMotion extends SearchBase
 
       return null if lineLength is undefined
 
-  characterAt: (position) ->
-    @editor.getTextInBufferRange([position, position.translate([0, 1])])
+  characterAt: (position, length = 1) ->
+    @editor.getTextInBufferRange([position, position.translate([0, length])])
 
   getSearchData: (position) ->
     @characterAt(position)
@@ -202,6 +203,8 @@ class BracketMatchingMotion extends SearchBase
     return unless inCharacter?
 
     if matchPosition = @searchForMatch(startPosition, reverse, inCharacter, outCharacter)
+      if CloseBrackets.indexOf(inCharacter) >= 0
+        matchPosition = matchPosition.translate([0, inCharacter.length - 1])
       cursor.setBufferPosition(matchPosition)
 
 class RepeatSearch extends SearchBase

@@ -136,6 +136,8 @@
   '[ (': 'vim-mode:bracket-searching-motion-parentheses-reverse'
   '] }': 'vim-mode:bracket-searching-motion-curly'
   '[ {': 'vim-mode:bracket-searching-motion-curly-reverse'
+  '] *': 'vim-mode:bracket-searching-motion-comment'
+  '[ *': 'vim-mode:bracket-searching-motion-comment-reverse'
 
   '1': 'vim-mode:repeat-prefix'
   '2': 'vim-mode:repeat-prefix'
