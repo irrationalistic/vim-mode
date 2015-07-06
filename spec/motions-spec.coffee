@@ -1787,6 +1787,42 @@ describe "Motions", ->
       keydown('n')
       expect(editor.getCursorBufferPosition()).toEqual [0, 31]
 
+  describe 'various bracket motions', ->
+    beforeEach ->
+      editor.setText("((test)\n{{test}\n")
+      editor.setCursorBufferPosition([0, 0])
+
+    it 'finds nearest parenthesis', ->
+      editor.setCursorBufferPosition([0, 3])
+      keydown('[')
+      keydown('(')
+      expect(editor.getCursorBufferPosition()).toEqual [0, 1]
+
+      editor.setCursorBufferPosition([0, 3])
+      keydown(']')
+      keydown(')')
+      expect(editor.getCursorBufferPosition()).toEqual [0, 6]
+
+    it 'finds nearest curly brackets', ->
+      editor.setCursorBufferPosition([1, 3])
+      keydown('[')
+      keydown('{')
+      expect(editor.getCursorBufferPosition()).toEqual [1, 1]
+
+      editor.setCursorBufferPosition([1, 3])
+      keydown(']')
+      keydown('}')
+      expect(editor.getCursorBufferPosition()).toEqual [1, 6]
+
+    it 'is exclusive', ->
+      editor.setCursorBufferPosition([0, 3])
+      keydown('[')
+      keydown('(')
+
+      keydown('[')
+      keydown('(')
+      expect(editor.getCursorBufferPosition()).toEqual [0, 0]
+
   describe "scrolling screen and keeping cursor in the same screen position", ->
     beforeEach ->
       editor.setText([0...80].join("\n"))
