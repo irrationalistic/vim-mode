@@ -132,10 +132,16 @@ AnyBracket = new RegExp(OpenBrackets.concat(CloseBrackets).map(_.escapeRegExp).j
 
 class BracketMatchingMotion extends SearchBase
   operatesInclusively: true
+  invertSearchDirection: false
 
   isComplete: -> true
 
+  searchCompleteCondition: (point, depth, character) ->
+    return point if depth is 0
+    return null if depth < 0
+
   searchForMatch: (startPosition, reverse, inCharacter, outCharacter) ->
+    console.log arguments
     depth = 0
     point = startPosition.copy()
     lineLength = @editor.lineTextForBufferRow(point.row).length
@@ -144,42 +150,47 @@ class BracketMatchingMotion extends SearchBase
 
     loop
       character = @characterAt(point)
-      depth++ if character is inCharacter
-      depth-- if character is outCharacter
 
-      return point if depth is 0
+      if @operatesInclusively or not point.isEqual startPosition
+        depth++ if character is inCharacter
+        depth-- if character is outCharacter
+
+      condition = @searchCompleteCondition(point, depth, character)
+      return condition if condition isnt undefined
 
       point.column += increment
-
-      return null if depth < 0
       return null if point.isEqual([0, -1])
       return null if point.isEqual(eofPosition)
 
       if point.column < 0
         point.row--
-        lineLength = @editor.lineTextForBufferRow(point.row).length
+        lineLength = @editor.lineTextForBufferRow(point.row)?.length
         point.column = lineLength - 1
       else if point.column >= lineLength
         point.row++
-        lineLength = @editor.lineTextForBufferRow(point.row).length
+        lineLength = @editor.lineTextForBufferRow(point.row)?.length
         point.column = 0
+
+      return null if lineLength is undefined
 
   characterAt: (position) ->
     @editor.getTextInBufferRange([position, position.translate([0, 1])])
 
   getSearchData: (position) ->
-    character = @characterAt(position)
+    @characterAt(position)
+
+  getBracketMatch: (character) ->
     if (index = OpenBrackets.indexOf(character)) >= 0
-      [character, CloseBrackets[index], false]
+      [character, CloseBrackets[index], if @invertSearchDirection then true else false]
     else if (index = CloseBrackets.indexOf(character)) >= 0
-      [character, OpenBrackets[index], true]
+      [character, OpenBrackets[index], if @invertSearchDirection then false else true]
     else
       []
 
   moveCursor: (cursor) ->
     startPosition = cursor.getBufferPosition()
 
-    [inCharacter, outCharacter, reverse] = @getSearchData(startPosition)
+    [inCharacter, outCharacter, reverse] = @getBracketMatch @getSearchData(startPosition)
 
     unless inCharacter?
       restOfLine = [startPosition, [startPosition.row, Infinity]]
@@ -187,7 +198,7 @@ class BracketMatchingMotion extends SearchBase
         startPosition = range.start
         stop()
 
-    [inCharacter, outCharacter, reverse] = @getSearchData(startPosition)
+    [inCharacter, outCharacter, reverse] = @getBracketMatch @getSearchData(startPosition)
 
     return unless inCharacter?
 
@@ -207,80 +218,16 @@ class RepeatSearch extends SearchBase
     this
 
 ###
-  Needs to find plausible containment, but doesn't need ending match!
-  (valid)
-  (valid
-
-  Should seek left or right depending on isReversed and find
-  occurrences of in and out character. Each out character decrements
-  a running counter. Each in counter increments a running counter.
-  As soon as the counter is positive, we arrived at a match!
-
-  (  (  )   test )
-  +1 +1 -1  < ^
-
-  Should work the same way in the other direction with swapped values
+  Search for a given bracket instead of just the character we are on
 ###
-class BracketSearchingMotion extends SearchBase
+class BracketSearchingMotion extends BracketMatchingMotion
   operatesInclusively: false
+  invertSearchDirection: true
 
-  isComplete: -> true
-  constructor: (@editor, @vimState, @character, @isReversed) ->
-    super(@editor, @vimState)
-    [@inCharacter, @outCharacter] = @getSearchData()
+  constructor: (@editor, @vimState, @character) -> super(@editor, @vimState)
 
-  getSearchData: () ->
-    if (index = OpenBrackets.indexOf(@character)) >= 0
-      [@character, CloseBrackets[index], false]
-    else if (index = CloseBrackets.indexOf(@character)) >= 0
-      [@character, OpenBrackets[index], true]
-    else
-      []
+  getSearchData: () -> @character
 
-  characterAt: (position) ->
-    @editor.getTextInBufferRange([position, position.translate([0, 1])])
-
-  searchForMatch: (position, direction) ->
-    point = position.copy()
-    eofPosition = @editor.getEofBufferPosition().translate([0, 1])
-    lineLength = @editor.lineTextForBufferRow(point.row).length
-    count = 0
-
-    # if starting on one a matching item, force an offset
-    # character = @characterAt(point)
-    # count-- if character is @inCharacter
-    # count++ if character is @outCharacter
-
-    loop
-      character = @characterAt(point)
-
-      # because this is an exclusive motion
-      if not point.isEqual position
-        count++ if character is @inCharacter
-        count-- if character is @outCharacter
-
-      return point if count > 0
-      return null if point.isEqual([0, -1])
-      return null if point.isEqual(eofPosition)
-
-      point.column += direction
-
-      # console.log point.column, character, count
-
-      if point.column < 0
-        point.row--
-        lineLength = @editor.lineTextForBufferRow(point.row)?.length
-        point.column = lineLength - 1
-      else if point.column >= lineLength
-        point.row++
-        lineLength = @editor.lineTextForBufferRow(point.row)?.length
-        point.column = 0
-
-      return if lineLength is undefined
-
-  moveCursor: (cursor) ->
-    startPosition = cursor.getBufferPosition()
-    if matchPosition = @searchForMatch(startPosition, if @isReversed then -1 else 1)
-      cursor.setBufferPosition(matchPosition)
+  searchCompleteCondition: (point, depth, character) -> return point if depth > 0
 
 module.exports = {Search, SearchCurrentWord, BracketMatchingMotion, RepeatSearch, BracketSearchingMotion}
