@@ -141,7 +141,6 @@ class BracketMatchingMotion extends SearchBase
     return null if depth < 0
 
   searchForMatch: (startPosition, reverse, inCharacter, outCharacter) ->
-    console.log arguments
     depth = 0
     point = startPosition.copy()
     lineLength = @editor.lineTextForBufferRow(point.row).length
