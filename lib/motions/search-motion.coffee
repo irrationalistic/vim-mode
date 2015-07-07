@@ -207,13 +207,14 @@ class BracketMatchingMotion extends SearchBase
     # find what group matches (if any) the current cursor's position
     searchRange = cursor.getCurrentLineBufferRange()
     cursorPoint = cursor.getBufferPosition()
+    cursorRange = [cursor.getBufferPosition(), cursor.getBufferPosition().translate([0, 1])]
     closestMatch = null
 
     scanHelper = (group, encapType, onComplete) ->
       ({range, stop}) ->
         potentialMatch = range: range, type: encapType, group: group
         match = potentialClosest = null
-        if range.containsPoint cursorPoint
+        if range.containsRange cursorRange
           match = potentialMatch
           stop()
         else if range.start.isGreaterThan(cursorPoint)
@@ -241,24 +242,25 @@ class BracketMatchingMotion extends SearchBase
 
   scanFor: (startPosition) ->
     result = null
+    cursorRange = [startPosition, startPosition.translate([0, 1])]
     scanMethod = if @searchFor is 'closer' then 'scanInBufferRange' else 'backwardsScanInBufferRange'
     eofPosition = @editor.getEofBufferPosition().translate([0, 1])
     points = [startPosition]
     points.unshift [0, -1] if @searchFor is 'opener'
     points.push eofPosition if @searchFor is 'closer'
 
-    console.log 'Scanning:', @searchFor, @searchGroup, scanMethod
+    # console.log 'Scanning:', @searchFor, @searchGroup, scanMethod
+    # console.log @editor.getTextInBufferRange points
 
     # from here we have a range to search through, the group to look for,
     # the specific expression(s) to use, and what exactly we want to find.
     currentCount = 0
     @editor[scanMethod] @searchGroup.combined, points, ({match, range, stop}) =>
-      return if range.containsPoint startPosition
+      return if range.containsRange cursorRange
       openMatch = match[1]
       closeMatch = match[2]
       currentCount++ if openMatch
       currentCount-- if closeMatch
-      console.log "#{@searchFor} count: #{currentCount}"
       if (@searchFor is 'opener' and currentCount > 0) or (@searchFor is 'closer' and currentCount < 0)
         result = if @searchFor is 'opener' then range.start else range.end.translate([0, -1])
         stop()
@@ -272,7 +274,6 @@ class BracketMatchingMotion extends SearchBase
       @searchDirection = if type is 'opener' then 1 else -1
       @searchFor = if type is 'opener' then 'closer' else 'opener'
       cursor.setBufferPosition range.start if range?
-
     return cursor.getBufferPosition() if not @searchGroup?
 
     # if I have results here, then they represent the current
