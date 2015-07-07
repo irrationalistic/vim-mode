@@ -190,7 +190,7 @@ encapsulationGroups =
   parenthesis:   new EncapsulationGroup /\(/,        /\)/            # parenthesis
   brackets:      new EncapsulationGroup /\[/,        /\]/            # brackets
   comments:      new EncapsulationGroup /\/\*/,      /\*\//          # multiline comments
-  conditions:    new EncapsulationGroup /#if|#else/, /#else|#endif/  # compiler conditions
+  # conditions:    new EncapsulationGroup /#if|#else/, /#else|#endif/  # compiler conditions
 
 
 class BracketMatchingMotion extends SearchBase
