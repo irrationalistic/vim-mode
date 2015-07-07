@@ -196,9 +196,9 @@ encapsulationGroups =
 class BracketMatchingMotion extends SearchBase
   isComplete: -> true
 
-  constructor: (@editor, @vimState, @operatesInclusively = true, encapsulationGroupId = null, searchForCloser = null) ->
+  constructor: (@editor, @vimState, encapsulationGroupId = null, searchForCloser = false) ->
     if encapsulationGroupId isnt null
-      @searchGroup = encapsulationGroups[@encapsulationGroupId]
+      @searchGroup = encapsulationGroups[encapsulationGroupId]
       @searchDirection = if searchForCloser then 1 else -1
       @searchFor = if searchForCloser then 'closer' else 'opener'
 

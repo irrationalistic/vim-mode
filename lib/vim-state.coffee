@@ -173,12 +173,12 @@ class VimState
       'search-current-word': (e) => new Motions.SearchCurrentWord(@editor, this)
       'bracket-matching-motion': (e) => new Motions.BracketMatchingMotion(@editor, this)
       'reverse-search-current-word': (e) => (new Motions.SearchCurrentWord(@editor, this)).reversed()
-      'bracket-searching-motion-parentheses': (e) => new Motions.BracketSearchingMotion(@editor, this, ')')
-      'bracket-searching-motion-parentheses-reverse': (e) => new Motions.BracketSearchingMotion(@editor, this, '(')
-      'bracket-searching-motion-curly': (e) => new Motions.BracketSearchingMotion(@editor, this, '}')
-      'bracket-searching-motion-curly-reverse': (e) => new Motions.BracketSearchingMotion(@editor, this, '{')
-      'bracket-searching-motion-comment': (e) => new Motions.BracketSearchingMotion(@editor, this, '*/')
-      'bracket-searching-motion-comment-reverse': (e) => new Motions.BracketSearchingMotion(@editor, this, '/*')
+      'bracket-searching-motion-parentheses': (e) => new Motions.BracketMatchingMotion(@editor, this, 'parenthesis', true)
+      'bracket-searching-motion-parentheses-reverse': (e) => new Motions.BracketMatchingMotion(@editor, this, 'parenthesis')
+      'bracket-searching-motion-curly': (e) => new Motions.BracketMatchingMotion(@editor, this, 'curlyBrackets', true)
+      'bracket-searching-motion-curly-reverse': (e) => new Motions.BracketMatchingMotion(@editor, this, 'curlyBrackets')
+      'bracket-searching-motion-comment': (e) => new Motions.BracketMatchingMotion(@editor, this, 'comments', true)
+      'bracket-searching-motion-comment-reverse': (e) => new Motions.BracketMatchingMotion(@editor, this, 'comments')
 
   # Private: Register multiple command handlers via an {Object} that maps
   # command names to command handler functions.
